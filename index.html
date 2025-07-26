@@ -1,26 +1,106 @@
-o<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Countdown to 2030</title>
   <style>
     body {
+      margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      background: black;
       color: white;
       text-align: center;
-      padding: 20px;
-      overflow: hidden;
+      overflow-x: hidden;
     }
+
+    .galaxy {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      overflow: hidden;
+      z-index: -1;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      animation: fall linear infinite;
+      opacity: 0.7;
+      border-radius: 50%;
+    }
+
+    .star.glow {
+      box-shadow: 0 0 5px 2px white;
+      opacity: 1;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-20px);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh);
+        opacity: 0;
+      }
+    }
+
     h1 {
       font-size: 2rem;
-      margin-bottom: 10px;
+      margin-top: 30px;
     }
+
     #countdown {
-      font-size: 2rem;
-      margin: 20px 0;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 30px 0;
     }
+
+    .flip-card {
+      perspective: 1000px;
+    }
+
+    .flip-inner {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+      background: #222;
+      color: #00ffcc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 10px;
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    .milestone, .achievement {
+      background: #1c1c1c;
+      margin: 10px auto;
+      padding: 10px;
+      border-left: 5px solid #00ffcc;
+      width: 80%;
+      text-align: left;
+    }
+
+    .section {
+      margin: 20px;
+    }
+
+    #achievements-container {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+
     #progressBarContainer {
       background-color: #444;
       border-radius: 20px;
@@ -29,6 +109,7 @@ o<!DOCTYPE html>
       height: 25px;
       width: 80%;
     }
+
     #progressBar {
       height: 100%;
       background-color: #00ffcc;
@@ -39,41 +120,32 @@ o<!DOCTYPE html>
       color: black;
       font-weight: bold;
     }
-    #milestones {
-      margin-top: 30px;
-    }
-    .milestone {
-      background-color: #1c1c1c;
-      margin: 10px auto;
-      padding: 10px;
-      border-left: 5px solid #00ffcc;
-      width: 80%;
-      text-align: left;
-    }
-    audio {
-      display: none;
-    }
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      pointer-events: none;
-      width: 100%;
-      height: 100%;
-      z-index: 100;
+
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+      border: none;
+      background-color: #00ffcc;
+      color: black;
+      border-radius: 8px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-
-  <h1>Countdown to 1st January 2030</h1>
-  <div id="countdown">Loading...</div>
-
+  <div class="galaxy" id="galaxy"></div>
+  <h1>Countdown to be the richest</h1>
+  <div id="countdown">
+    <div class="flip-card"><div class="flip-inner" id="years">0y</div></div>
+    <div class="flip-card"><div class="flip-inner" id="days">0d</div></div>
+    <div class="flip-card"><div class="flip-inner" id="hours">0h</div></div>
+    <div class="flip-card"><div class="flip-inner" id="minutes">0m</div></div>
+    <div class="flip-card"><div class="flip-inner" id="seconds">0s</div></div>
+  </div>
   <div id="progressBarContainer">
     <div id="progressBar">0%</div>
   </div>
-
-  <div id="milestones">
+  <div class="section">
     <h2>Milestones</h2>
     <div class="milestone" id="m2026">🎯 1 Jan 2026 - Pending</div>
     <div class="milestone" id="m2027">🎯 1 Jan 2027 - Pending</div>
@@ -81,13 +153,15 @@ o<!DOCTYPE html>
     <div class="milestone" id="m2029">🎯 1 Jan 2029 - Pending</div>
     <div class="milestone" id="m2030">🎉 1 Jan 2030 - Final Goal</div>
   </div>
+  <div class="section">
+    <h2>Achievements</h2>
+    <div id="achievements-container">
+      <div class="achievement">🎓 I learned coding</div>
+    </div>
+  </div>
 
-  <!-- Background music and alarm sound -->
   <audio id="alarm" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1709f18483.mp3?filename=digital-alarm-clock-132660.mp3"></audio>
   <audio id="music" src="https://cdn.pixabay.com/download/audio/2022/03/28/audio_4ec3d59e2d.mp3?filename=motivational-background-112106.mp3" loop></audio>
-
-  <!-- Fireworks canvas -->
-  <canvas id="fireworks"></canvas>
 
   <script>
     const endDate = new Date("2030-01-01T00:00:00").getTime();
@@ -97,119 +171,69 @@ o<!DOCTYPE html>
     function updateCountdown() {
       const now = new Date().getTime();
       const distance = endDate - now;
-
       const years = Math.floor(distance / (1000 * 60 * 60 * 24 * 365));
       const days = Math.floor((distance % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24));
       const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-      document.getElementById("countdown").innerHTML =
-        `${years}y ${days}d ${hours}h ${minutes}m ${seconds}s`;
+      flip("years", years + "y");
+      flip("days", days + "d");
+      flip("hours", hours + "h");
+      flip("minutes", minutes + "m");
+      flip("seconds", seconds + "s");
 
       const progress = ((now - startDate) / (endDate - startDate)) * 100;
       const progressBar = document.getElementById("progressBar");
       progressBar.style.width = `${progress.toFixed(2)}%`;
       progressBar.innerText = `${progress.toFixed(2)}%`;
 
-      const milestoneYears = [2026, 2027, 2028, 2029, 2030];
-      milestoneYears.forEach(year => {
+      [2026, 2027, 2028, 2029, 2030].forEach(year => {
         const mDate = new Date(`${year}-01-01T00:00:00`).getTime();
         if (now >= mDate) {
-          document.getElementById(`m${year}`).style.background = "#004d40";
-          document.getElementById(`m${year}`).innerText = `✅ 1 Jan ${year} - Completed`;
+          const el = document.getElementById(`m${year}`);
+          el.style.background = "#004d40";
+          el.innerText = `✅ 1 Jan ${year} - Completed`;
         }
       });
 
       if (distance <= 0 && !hasPlayed) {
-        document.getElementById("countdown").innerHTML = "🎉 It's 2030!";
-        document.getElementById("progressBar").style.width = "100%";
-        document.getElementById("progressBar").innerText = "100%";
-
         document.getElementById("alarm").play();
         setTimeout(() => {
           document.getElementById("music").play();
-          launchFireworks();
         }, 3000);
         hasPlayed = true;
         clearInterval(countdownInterval);
       }
     }
 
-    const countdownInterval = setInterval(updateCountdown, 1000);
-  </script>
-
-  <!-- Fireworks Script -->
-  <script>
-    const canvas = document.getElementById('fireworks');
-    const ctx = canvas.getContext('2d');
-    let W = window.innerWidth;
-    let H = window.innerHeight;
-    canvas.width = W;
-    canvas.height = H;
-
-    const particles = [];
-
-    function randomColor() {
-      return `hsl(${Math.floor(Math.random() * 360)}, 100%, 60%)`;
-    }
-
-    function Particle(x, y, color) {
-      this.x = x;
-      this.y = y;
-      this.radius = Math.random() * 2 + 1;
-      this.color = color;
-      this.speedX = Math.random() * 6 - 3;
-      this.speedY = Math.random() * 6 - 3;
-      this.alpha = 1;
-
-      this.update = function () {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        this.alpha -= 0.01;
-      };
-
-      this.draw = function () {
-        ctx.globalAlpha = this.alpha;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-      };
-    }
-
-    function launchFireworks() {
-      setInterval(() => {
-        const x = Math.random() * W;
-        const y = Math.random() * H / 2;
-        const color = randomColor();
-        for (let i = 0; i < 100; i++) {
-          particles.push(new Particle(x, y, color));
-        }
-      }, 800);
-      animate();
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, W, H);
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.update();
-        p.draw();
-        if (p.alpha <= 0) {
-          particles.splice(i, 1);
-        }
+    function flip(id, newValue) {
+      const el = document.getElementById(id);
+      if (el.innerText !== newValue) {
+        el.style.transform = "rotateX(180deg)";
+        setTimeout(() => {
+          el.innerText = newValue;
+          el.style.transform = "rotateX(0deg)";
+        }, 300);
       }
-      requestAnimationFrame(animate);
     }
 
-    window.addEventListener("resize", () => {
-      W = window.innerWidth;
-      H = window.innerHeight;
-      canvas.width = W;
-      canvas.height = H;
-    });
-  </script>
+    const countdownInterval = setInterval(updateCountdown, 1000);
 
+    function createStars() {
+      const galaxy = document.getElementById("galaxy");
+      for (let i = 0; i < 250; i++) {
+        const star = document.createElement("div");
+        star.className = "star";
+        if (Math.random() > 0.85) star.classList.add("glow");
+        star.style.left = `${Math.random() * 100}vw`;
+        star.style.top = `-${Math.random() * 100}px`;
+        star.style.animationDuration = `${5 + Math.random() * 10}s`;
+        galaxy.appendChild(star);
+      }
+    }
+
+    createStars();
+  </script>
 </body>
 </html>
